@@ -54,7 +54,7 @@ def put_logs(client, group_name, stream_name_prefix, message):
                         pass
                     else:
                         exist_log_group = True
-                if exist_log_stream == False:
+                elif exist_log_stream == False:
                     #Create LogStream
                     try:
                         client.create_log_stream(
@@ -64,7 +64,7 @@ def put_logs(client, group_name, stream_name_prefix, message):
                         exist_log_group = False
                     else:
                         exist_log_stream = True
-                if sequence_token is None:
+                elif sequence_token is None:
                     client.put_log_events(
                         logGroupName = group_name,
                         logStreamName = stream_name_prefix,
