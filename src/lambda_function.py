@@ -51,13 +51,18 @@ def put_logs(client, group_name, stream_name_prefix, message):
                         client.create_log_group(logGroupName=group_name)
                     except client.exceptions.ResourceAlreadyExistsException:
                         pass
-
                     #Create LogStream
                     client.create_log_stream(
                         logGroupName = group_name,
                         logStreamName = stream_name_prefix)
                     exist_log_stream = True
-                    
+                    #Write First event log
+                    client.put_log_events(
+                        logGroupName = group_name,
+                        logStreamName = stream_name_prefix,
+                        logEvents = [log_event])
+                    break_loop = True
+
                 elif sequence_token is None:
                     client.put_log_events(
                         logGroupName = group_name,
