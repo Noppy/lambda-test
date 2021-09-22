@@ -14,7 +14,7 @@ jobs:
       run:
         shell: bash
     env:
-      LambdaFunctionName: "lv-security-lambda-security-alert-prod"
+      LambdaFunctionName: "lv-security-lambda-security-alert-dev"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
