@@ -5,8 +5,8 @@ import json
 import logging
 
 # Import Bolt for Python (github.com/slackapi/bolt-python)
-from .packages.slack_sdk import WebClient
-from .packages.slack_sdk.errors import SlackApiError
+from packages.slack_sdk import WebClient
+from packages.slack_sdk.errors import SlackApiError
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
