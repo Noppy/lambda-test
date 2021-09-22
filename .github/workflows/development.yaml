@@ -28,7 +28,7 @@ jobs:
 
       - name: create zip
         working-directory: src
-        run: zip -r ../package.zip ./*
+        run: zip -r ../package.zip .
 
       - name: update function code
         run: aws lambda update-function-code --function-name ${{env.LambdaFunctionName}} --zip-file fileb://package.zip --no-publish
