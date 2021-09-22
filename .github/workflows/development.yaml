@@ -14,7 +14,7 @@ jobs:
       run:
         shell: bash
     env:
-      LlambdaFunctionName: "lv-security-lambda-security-alert-prod"
+      LambdaFunctionName: "lv-security-lambda-security-alert-prod"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -31,4 +31,4 @@ jobs:
         run: zip -r ../package.zip ./*
 
       - name: update function code
-        run: aws lambda update-function-code --function-name ${{LlambdaFunctionName}} --zip-file file://package.zip --no-publish
+        run: aws lambda update-function-code --function-name ${{env.LambdaFunctionName}} --zip-file file://package.zip --no-publish
