@@ -40,30 +40,24 @@ def put_logs(client, group_name, stream_name_prefix, message):
         }
         
         #Set Flags
-        exist_log_group  = True
         exist_log_stream = True
         sequence_token = None
         while True:
             break_loop = False
             try:
-                if exist_log_group == False:
+                if exist_log_stream == False:
                     #Create LogGroup
                     try:
                         client.create_log_group(logGroupName=group_name)
                     except client.exceptions.ResourceAlreadyExistsException:
                         pass
-                    else:
-                        exist_log_group = True
-                elif exist_log_stream == False:
+
                     #Create LogStream
-                    try:
-                        client.create_log_stream(
-                            logGroupName = group_name,
-                            logStreamName = stream_name_prefix)
-                    except client.exceptions.ResourceNotFoundException as e:
-                        exist_log_group = False
-                    else:
-                        exist_log_stream = True
+                    client.create_log_stream(
+                        logGroupName = group_name,
+                        logStreamName = stream_name_prefix)
+                    exist_log_stream = True
+                    
                 elif sequence_token is None:
                     client.put_log_events(
                         logGroupName = group_name,
@@ -76,7 +70,6 @@ def put_logs(client, group_name, stream_name_prefix, message):
                         logEvents = [log_event],
                         sequenceToken = sequence_token)
                     break_loop = True
-
             except client.exceptions.ResourceNotFoundException as e:
                 exist_log_stream = False
             except client.exceptions.DataAlreadyAcceptedException as e:
