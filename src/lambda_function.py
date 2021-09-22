@@ -1,10 +1,10 @@
 
 
-import os
-import time
-import json
-import logging
-import boto3
+#import os
+#import time
+#import json
+#import logging
+#import boto3
 
 # Import Bolt for Python (github.com/slackapi/bolt-python)
 from packages.slack_sdk import WebClient
@@ -20,17 +20,17 @@ logStreamName = "development"
 def lambda_handler(event, context):
 
     #Get Session
-    client = boto3.client('logs')
+    #client = boto3.client('logs')
 
     #Put Log Event
-    put_logs(client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(event)))
+    #Sput_logs(client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(event)))
 
     return {
         'statusCode': 200,
         'body': json.dumps('Hello from Lambda!')
     }
 
-
+"""
 def put_logs(client, group_name, stream_name_prefix, message):
     try:
         #Set Logs Event Data
@@ -83,3 +83,4 @@ def put_logs(client, group_name, stream_name_prefix, message):
                 break
     except Exception as e:
         print(e)
+"""
