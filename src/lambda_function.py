@@ -3,6 +3,7 @@
 import json
 import os
 import time
+import datetime
 import logging
 import boto3
 
@@ -19,19 +20,31 @@ logStreamName = "development"
   
 def lambda_handler(event, context):
 
-    #Set parameter from environment values
-    slack_token = os.environ['SLACK_TOKEN']    
+    #----------------------------------------
+    # Initialize
+    #----------------------------------------
+    #Set parameters from environment values
     if os.environ['DRY_RUN'].lower == "true":
         dry_run = True
     else:
         dry_run = False
+    slack_token   = os.environ['SLACK_TOKEN'] 
+    logGroupName  = os.environ['LOG_GROUP']
+    logStreamName = datetime.datetime.now().strftime('%Y%m%d')
 
     #Get Session
     logs_client = boto3.client('logs')
     slack_client = WebClient( token=os.environ['SLACK_TOKEN'] )
 
+    #----------------------------------------
+    # Identify the channel to send
+    #----------------------------------------
+
+    #----------------------------------------
+    # Send Message
+    #----------------------------------------
     ret = slack_client.chat_postMessage(channel="for-test", text="Hello world")
-    put_logs(logs_client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(ret)))
+    put_logs(logs_client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(event)))
 
 
 
