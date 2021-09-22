@@ -1,14 +1,14 @@
 
 
+import json
 #import os
 #import time
-#import json
-#import logging
+import logging
 #import boto3
 
 # Import Bolt for Python (github.com/slackapi/bolt-python)
-from packages.slack_sdk import WebClient
-from packages.slack_sdk.errors import SlackApiError
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

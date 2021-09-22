@@ -6,5 +6,5 @@
 
 
 ```sh
-pip install --target ./packages  --upgrade slack_sdk
+pip install --target .  --upgrade slack_sdk
 ```
