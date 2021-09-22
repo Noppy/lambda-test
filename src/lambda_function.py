@@ -31,7 +31,7 @@ def lambda_handler(event, context):
     slack_client = WebClient( token=os.environ['SLACK_TOKEN'] )
 
     ret = slack_client.chat_postMessage(channel="for-test", text="Hello world")
-
+    put_logs(logs_client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(ret)))
 
 
 
@@ -39,7 +39,7 @@ def lambda_handler(event, context):
 
 
     #Put Log Event
-    put_logs(logs_client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(event)))
+    
 
     return {
         'statusCode': 200,
