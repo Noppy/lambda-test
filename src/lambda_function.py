@@ -19,11 +19,27 @@ logStreamName = "development"
   
 def lambda_handler(event, context):
 
+    #Set parameter from environment values
+    slack_token = os.environ['SLACK_TOKEN']    
+    if os.environ['DRY_RUN'].lower == "true":
+        dry_run = True
+    else:
+        dry_run = False
+
     #Get Session
-    client = boto3.client('logs')
+    logs_client = boto3.client('logs')
+    slack_client = WebClient( token=os.environ['SLACK_TOKEN'] )
+
+    ret = slack_client.chat_postMessage(channel="for-test", text="Hello world")
+
+
+
+
+
+
 
     #Put Log Event
-    put_logs(client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(event)))
+    put_logs(logs_client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(event)))
 
     return {
         'statusCode': 200,
@@ -62,7 +78,6 @@ def put_logs(client, group_name, stream_name_prefix, message):
                         logStreamName = stream_name_prefix,
                         logEvents = [log_event])
                     break_loop = True
-
                 elif sequence_token is None:
                     client.put_log_events(
                         logGroupName = group_name,
