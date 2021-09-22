@@ -1,4 +1,4 @@
-name: 'lambda function CICD(development)'
+name: 'lambda CICD(development)'
 on:
   push:
     branches:
@@ -32,3 +32,6 @@ jobs:
 
       - name: update function code
         run: aws lambda update-function-code --function-name ${{env.LambdaFunctionName}} --zip-file fileb://package.zip --no-publish
+
+      - name: test a lambda function
+        run: aws lambda invoke --function-name lv-security-lambda-security-alert-dev response.json
