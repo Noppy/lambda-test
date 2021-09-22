@@ -40,30 +40,37 @@ def put_logs(client, group_name, stream_name_prefix, message):
         }
         
         #Set Flags
+        exist_log_group  = True
         exist_log_stream = True
         sequence_token = None
-
         while True:
             break_loop = False
             try:
-                if exist_log_stream == False:
+                if exist_log_group == False:
                     #Create LogGroup
                     try:
                         client.create_log_group(logGroupName=group_name)
                     except client.exceptions.ResourceAlreadyExistsException:
                         pass
+                    else:
+                        exist_log_group = True
+                if exist_log_stream == False:
                     #Create LogStream
-                    create_log_stream_response = client.create_log_stream(
-                        logGroupName = group_name,
-                        logStreamName = stream_name_prefix)
-                    exist_log_stream = True
+                    try:
+                        client.create_log_stream(
+                            logGroupName = group_name,
+                            logStreamName = stream_name_prefix)
+                    except client.exceptions.ResourceNotFoundException as e:
+                        exist_log_group = False
+                    else:
+                        exist_log_stream = True
                 if sequence_token is None:
-                    put_log_events_response = client.put_log_events(
+                    client.put_log_events(
                         logGroupName = group_name,
                         logStreamName = stream_name_prefix,
                         logEvents = [log_event])
                 else:
-                    put_log_events_response = client.put_log_events(
+                    client.put_log_events(
                         logGroupName = group_name,
                         logStreamName = stream_name_prefix,
                         logEvents = [log_event],
