@@ -85,8 +85,7 @@ def publish_message(session, channel, finding):
               'First Seen: {}\nLast Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
 
     put_logs(session['logs_client'], logGroupName, logStreamName, message)  
-    put_logs(session['logs_client'], logGroupName, logStreamName, os.environ['DRY_RUN'].lower)
-    if os.environ['DRY_RUN'].lower != "true":
+    if os.environ['DRY_RUN'].lower() != "true":
         try:
             session['slack_client'].chat_postMessage(channel=channel, text=message)
         except SlackApiError as e:
