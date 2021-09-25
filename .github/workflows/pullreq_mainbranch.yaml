@@ -40,6 +40,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+    
+      - name: Setup AWS credentals
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-1
 
       - name: test a lambda function(shared accounts)
         run: aws lambda invoke --function-name lv-security-lambda-security-alert-dev --payload fileb://test_payload_777777777777.json response.json
