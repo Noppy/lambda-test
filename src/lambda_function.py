@@ -36,7 +36,7 @@ else:
     logger.setLevel(logging.WARNING)
 
 logGroupName  = os.environ['LOG_GROUP']
-logStreamName = datetime.datetime.now().strftime('%Y%m%d')
+logStreamName = datetime.datetime.now(datetime.timezone('Asia/Tokyo')).strftime('%Y%m%d')
 
 def lambda_handler(event, context):
 
@@ -124,7 +124,7 @@ def publish_message(session, channel, finding):
               '{}\n\n{}\n\nFinding Type: {}\n\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
               'First Seen: {}\nLast Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
 
-    put_logs(session['logs_client'], logGroupName, logStreamName, message)  
+    put_logs(session['logs_client'], logGroupName, logStreamName, "slack channel: {}\message: {}".format(channel, message))  
     if not DEBUG:
         try:
             session['slack_client'].chat_postMessage(channel=channel, text=message)
