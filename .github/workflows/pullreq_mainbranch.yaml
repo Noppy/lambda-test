@@ -60,8 +60,3 @@ jobs:
         run: |
           aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_999999999999.json response.json
           grep 200 response.json
-
-      - name: "TEST: xxxxxxx."
-        run: |
-          aws lambda invoke --function-name ${{env.LambdaFunctionName}} response.json
-          grep 200 response.json

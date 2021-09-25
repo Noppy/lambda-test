@@ -63,7 +63,7 @@ def lambda_handler(event, context):
     #----------------------------------------
     channel_name = detect_slack_channel(session, finding_info)
 
-
+    return { 'statusCode': 400 }
 
     #----------------------------------------
     # Send Message
