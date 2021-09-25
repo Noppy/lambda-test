@@ -45,13 +45,14 @@ logStreamName = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours
 # Main
 #----------------------------------------
 def lambda_handler(event, context):
+
     #Check if the event is a security hub finding
-    logger.info("{0}".format( json.dumps(event)))
+    logger.warning("{0}".format( json.dumps(event)))
     if event['source'] != 'aws.securityhub':
         logger.error('This event is not a SecurityHub event')
         return { 'statusCode': 400 }
     finding_info = get_securityhub_finding(event)
-    logger.info(finding_info)
+    logger.info(json.dumps(finding_info))
 
     #Get Session
     session = {
@@ -97,7 +98,7 @@ def detect_slack_channel(session, finding_info):
     for i in shared_accounts_list:
         logger.info( "shared account check: finding's account: {} check account: {}".format(accountid, i) )
         if accountid == i:
-            logger.info( "shared account check: detect account: {}".format(i) )
+            logger.warning( "shared account check: detect account: {}".format(i) )
             return slack_channel_name_list['shared']
     
     #check resource accounts
@@ -113,11 +114,11 @@ def detect_slack_channel(session, finding_info):
         if match:
             channel_awsid = match.groups()[0]
             if accountid == channel_awsid:
-                logger.info( "resource account check: detect account: {}".format(ch_name) )
+                logger.warning( "resource account check: detect account: {}".format(ch_name) )
                 return ch_name
 
     #other
-    logger.info( "not found slack channel: set the other channel" )
+    logger.warning( "not found slack channel: set the other channel({})".format(slack_channel_name_list['other']) )
     return slack_channel_name_list['other']
 
 
@@ -188,9 +189,9 @@ def put_logs(client, group_name, stream_name_prefix, message):
             except client.exceptions.InvalidSequenceTokenException as e:
                 sequence_token = e.response.get('expectedSequenceToken')
             except Exception as e:
-                print(e)
+                logger.error(e)
             
             if break_loop:
                 break
     except Exception as e:
-        print(e)
+        logger.error(e)
