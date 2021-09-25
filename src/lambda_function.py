@@ -22,10 +22,18 @@ slack_channel_name_list = {
     "other":  "lv-other-aws-secalerts"
 }
 
+# set debug mode
+if os.environ['DEBUG'].lower() != "true":
+    DEBUG = False
+else:
+    DEBUG = True
 
 # log setting
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+if DEBUG:
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.INFO)
 
 logGroupName  = os.environ['LOG_GROUP']
 logStreamName = datetime.datetime.now().strftime('%Y%m%d')
@@ -41,6 +49,7 @@ def lambda_handler(event, context):
         logger.error('This event is not a SecurityHub event')
         return
     finding_info = get_securityhub_finding(event)
+    logger.debug(finding_info)
 
     #Get Session
     session = {
@@ -58,7 +67,7 @@ def lambda_handler(event, context):
     #----------------------------------------
     # Send Message
     #----------------------------------------
-    publish_message(session, "for-test", finding_info )
+    publish_message(session, "for-test", finding_info)
 
 
     #ret = slack_client.chat_postMessage(channel="for-test", text="Hello world")
@@ -116,7 +125,7 @@ def publish_message(session, channel, finding):
               'First Seen: {}\nLast Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
 
     put_logs(session['logs_client'], logGroupName, logStreamName, message)  
-    if os.environ['DRY_RUN'].lower() != "true":
+    if not DEBUG:
         try:
             session['slack_client'].chat_postMessage(channel=channel, text=message)
         except SlackApiError as e:
