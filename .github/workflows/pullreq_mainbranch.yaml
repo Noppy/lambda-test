@@ -7,7 +7,7 @@ env:
   LambdaFunctionName: "lv-security-lambda-security-alert-dev"
 jobs:  
   deploy_lambda:
-    name: 'Deploy a lambda function'
+    name: 'Deploy a lambda function(Test)'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -48,11 +48,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-1
 
-      - name: test a lambda function(shared accounts)
+      - name: "TEST: shared accounts security alert test."
         run: aws lambda invoke --function-name lv-security-lambda-security-alert-dev --payload fileb://test_payload_777777777777.json response.json
 
-      - name: test a lambda function(other accounts)
-        run: aws lambda invoke --function-name lv-security-lambda-security-alert-dev --payload fileb://test_payload_888888888888.json response.json
+      - name: "TEST: Resource accounts security alert test."
+        run: aws lambda invoke --function-name lv-securit-lambda-security-alert-dev --payload fileb://test_payload_888888888888.json response.json
 
-      - name: test a lambda function(resource accounts)
+      - name: "TEST: other accounts security alert test."
         run: aws lambda invoke --function-name lv-security-lambda-security-alert-dev --payload fileb://test_payload_999999999999.json response.json
