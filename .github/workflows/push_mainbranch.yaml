@@ -4,7 +4,7 @@ on:
     branches:
       - main
 env:
-  LambdaFunctionName: "lv-security-lambda-security-alert-dev"
+  LambdaFunctionName: "lv-security-lambda-security-alert-prod"
 jobs:  
   deploy_lambda:
     name: 'Deploy a lambda function(Production)'
