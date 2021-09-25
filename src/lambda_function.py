@@ -31,9 +31,9 @@ else:
 # log setting
 logger = logging.getLogger()
 if DEBUG:
-    logger.setLevel(logging.DEBUG)
-else:
     logger.setLevel(logging.INFO)
+else:
+    logger.setLevel(logging.WARNING)
 
 logGroupName  = os.environ['LOG_GROUP']
 logStreamName = datetime.datetime.now().strftime('%Y%m%d')
@@ -44,12 +44,12 @@ def lambda_handler(event, context):
     # Initialize
     #----------------------------------------
     #Check if the event is a security hub finding
-    logger.debug("{0}".format( json.dumps(event)))
+    logger.info("{0}".format( json.dumps(event)))
     if event['source'] != 'aws.securityhub':
         logger.error('This event is not a SecurityHub event')
         return
     finding_info = get_securityhub_finding(event)
-    logger.debug(finding_info)
+    logger.info(finding_info)
 
     #Get Session
     session = {
@@ -106,9 +106,9 @@ def detect_slack_channel(session, finding_info):
 
     #check shared account
     for i in shared_accounts_list:
-        logger.debug( "shared account check: finding's account: {} check account: {}".format(accountid, i) )
+        logger.info( "shared account check: finding's account: {} check account: {}".format(accountid, i) )
         if accountid == i:
-            logger.debug( "shared account check: detect account: {}".format(i) )
+            logger.info( "shared account check: detect account: {}".format(i) )
             return slack_channel_name_list['shared']
     
     #check
