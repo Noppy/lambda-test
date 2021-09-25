@@ -3,15 +3,15 @@ on:
   push:
     branches:
       - main
+env:
+  LambdaFunctionName: "lv-security-lambda-security-alert-dev"
 jobs:  
-  run_terraform:
-    name: 'Deploy and test a lambda function'
+  deploy_lambda:
+    name: 'Deploy a lambda function(Production)'
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-    env:
-      LambdaFunctionName: "lv-security-lambda-security-alert-prod"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -29,3 +29,4 @@ jobs:
 
       - name: update function code
         run: aws lambda update-function-code --function-name ${{env.LambdaFunctionName}} --zip-file fileb://package.zip --no-publish
+      
