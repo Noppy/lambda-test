@@ -105,15 +105,16 @@ def detect_slack_channel(session, finding_info):
         limit=1000,
         exclude_archived = True
     )
-    for ch in channels:
-        logger.info( "resource account check: inding's account: {} slack channel: {}".format(accountid, ch) )
+    for ch in channels['channels']:
+        ch_name = ch['name']
+        logger.info( "resource account check: finding's account: {} slack channel: {}".format(accountid, ch_name) )
         channel_awsid = "NA"
-        match = re.search(r'.*([0-9]{12})$', ch)
+        match = re.search(r'.*([0-9]{12})$', ch_name)
         if match:
             channel_awsid = match.groups()[0]
             if accountid == channel_awsid:
-                logger.info( "resource account check: detect account: {}".format(ch) )
-                return ch
+                logger.info( "resource account check: detect account: {}".format(ch_name) )
+                return ch_name
 
     #other
     logger.info( "not found slack channel: set the other channel" )
