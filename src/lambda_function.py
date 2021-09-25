@@ -36,7 +36,7 @@ else:
     logger.setLevel(logging.WARNING)
 
 logGroupName  = os.environ['LOG_GROUP']
-logStreamName = datetime.datetime.now(datetime.timezone('Asia/Tokyo')).strftime('%Y%m%d')
+logStreamName = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=+9), 'JST')).strftime('%Y%m%d')
 
 def lambda_handler(event, context):
 
