@@ -67,15 +67,15 @@ def lambda_handler(event, context):
 def get_securityhub_finding(event):
     ret = {
         'detail-type':  event['detail-type'],
-        'region':       event['detail']['findings']['Region'],
-        'AwsAccountId': event['detail']['findings']['AwsAccountId'],
-        'Title':        event['detail']['findings']['Title'],
-        'Description':  event['detail']['findings']['Description'],
-        'Types':        event['detail']['findings']['FindingProviderFields']['Types'][0],
-        'FirstSeen':    event['detail']['findings']['FirstObservedAt'],
-        'LastSeen':     event['detail']['findings']['LastObservedAt'],
-        'AffectedResource': event['detail']['findings']['ProductFields']['Resources:0/Id'],
-        'Severity':     event['detail']['findings']['FindingProviderFields']['Severity']['Label']
+        'region':       event['detail'][0]['findings']['Region'],
+        'AwsAccountId': event['detail'][0]['findings']['AwsAccountId'],
+        'Title':        event['detail'][0]['findings']['Title'],
+        'Description':  event['detail'][0]['findings']['Description'],
+        'Types':        event['detail'][0]['findings']['FindingProviderFields']['Types'][0],
+        'FirstSeen':    event['detail'][0]['findings']['FirstObservedAt'],
+        'LastSeen':     event['detail'][0]['findings']['LastObservedAt'],
+        'Resource':     event['detail'][0]['findings']['ProductFields']['Resources:0/Id'],
+        'Severity':     event['detail'][0]['findings']['FindingProviderFields']['Severity']['Label']
     }
     return ret
 
@@ -83,7 +83,7 @@ def get_securityhub_finding(event):
 def publish_message(session, channel, finding):
     message = '{}|{}|Account: {}\n'.format( finding['detail-type'], finding['region'], finding['AwsAccountId'] ) + \
               '{}\n\n{}\n\nFinding Type: {}'.format( finding['Title'], finding['Description'], finding['Types']) + \
-              'First Seen: {}  Last Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['AffectedResource'], finding['Severity'] )
+              'First Seen: {}  Last Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
 
     put_logs(session['logs_client'], logGroupName, logStreamName, message)  
     if os.environ['DRY_RUN'].lower != "true":
