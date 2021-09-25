@@ -51,12 +51,15 @@ jobs:
       - name: "TEST: shared accounts security alert test."
         run: |
           aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_777777777777.json response.json
+          echo "response.json" && cat response.json
           grep 200 response.json
       #- name: "TEST: Resource accounts security alert test."
       #  run: |
       #  aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_888888888888.json response.json
+      #  echo "response.json" && cat response.json
       #  grep 200 response.json
       - name: "TEST: other accounts security alert test."
         run: |
           aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_999999999999.json response.json
+          echo "response.json" && cat response.json
           grep 200 response.json
