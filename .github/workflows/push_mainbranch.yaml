@@ -1,11 +1,8 @@
-name: 'lambda CICD(production)'
+name: 'lambda CICD'
 on:
   push:
     branches:
-      - production
-  pull_request:
-    branches:
-      - production
+      - main
 jobs:  
   run_terraform:
     name: 'Deploy and test a lambda function'
