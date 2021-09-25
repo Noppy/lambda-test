@@ -52,44 +52,47 @@ def lambda_handler(event, context):
     #put_logs(logs_client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(event)))
 
 
-
+    #success
     return {
-        'statusCode': 200,
-        'body': json.dumps('Hello from Lambda!')
+        'statusCode': 200
     }
 
-
+#----------------------------------------
+# Functions
+#----------------------------------------
+# Extraction of necessary information
 def get_securityhub_finding(event):
+    finding = event['detail']['findings'][0]
     ret = {
         'detail-type':  event['detail-type'],
-        'region':       event['detail']['findings'][0]['Region'],
-        'AwsAccountId': event['detail']['findings'][0]['AwsAccountId'],
-        'Title':        event['detail']['findings'][0]['Title'],
-        'Description':  event['detail']['findings'][0]['Description'],
-        'Types':        event['detail']['findings'][0]['FindingProviderFields']['Types'][0],
-        'FirstSeen':    event['detail']['findings'][0]['FirstObservedAt'],
-        'LastSeen':     event['detail']['findings'][0]['LastObservedAt'],
-        'Resource':     event['detail']['findings'][0]['ProductFields']['Resources:0/Id'],
-        'Severity':     event['detail']['findings'][0]['FindingProviderFields']['Severity']['Label']
+        'region':       finding['Region'],
+        'AwsAccountId': finding['AwsAccountId'],
+        'Title':        finding['Title'],
+        'Description':  finding['Description'],
+        'Types':        finding['FindingProviderFields']['Types'][0],
+        'FirstSeen':    finding['FirstObservedAt'],
+        'LastSeen':     finding['LastObservedAt'],
+        'Resource':     finding['ProductFields']['Resources:0/Id'],
+        'Severity':     finding['FindingProviderFields']['Severity']['Label']
     }
     return ret
 
-
+# Publish message to specifed slack channel and logs
+# (In dry-run mode, write only to logs)
 def publish_message(session, channel, finding):
     message = '{}|{}|Account: {}\n'.format( finding['detail-type'], finding['region'], finding['AwsAccountId'] ) + \
-              '{}\n\n{}\n\nFinding Type: {}\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
-              'First Seen: {}  Last Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
+              '{}\n\n{}\n\nFinding Type: {}\n\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
+              'First Seen: {}\nLast Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
 
     put_logs(session['logs_client'], logGroupName, logStreamName, message)  
     if os.environ['DRY_RUN'].lower != "true":
         try:
-            ret = session['slack_client'].chat_postMessage(channel=channel, text=message)
+            session['slack_client'].chat_postMessage(channel=channel, text=message)
         except SlackApiError as e:
             logger.error( e.response["error"] )
-    
-    return ret
+    return
 
-
+# Write message to  specifed CloudWatch Logs log group
 def put_logs(client, group_name, stream_name_prefix, message):
     try:
         #Set Logs Event Data
