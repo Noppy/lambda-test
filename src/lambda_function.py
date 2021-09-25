@@ -14,19 +14,14 @@ from slack_sdk.errors import SlackApiError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-
-logGroupName = "security-alaert"
-logStreamName = "null"
+logGroupName  = os.environ['LOG_GROUP']
+logStreamName = datetime.datetime.now().strftime('%Y%m%d')
   
 def lambda_handler(event, context):
 
     #----------------------------------------
     # Initialize
     #----------------------------------------
-    #Set parameters from environment values
-    logGroupName  = os.environ['LOG_GROUP']
-    logStreamName = datetime.datetime.now().strftime('%Y%m%d')
-
     #Check if the event is a security hub finding
     logger.debug("{0}".format( json.dumps(event)))
     if event['source'] != 'aws.securityhub':
@@ -82,7 +77,7 @@ def get_securityhub_finding(event):
 
 def publish_message(session, channel, finding):
     message = '{}|{}|Account: {}\n'.format( finding['detail-type'], finding['region'], finding['AwsAccountId'] ) + \
-              '{}\n\n{}\n\nFinding Type: {}'.format( finding['Title'], finding['Description'], finding['Types']) + \
+              '{}\n\n{}\n\nFinding Type: {}\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
               'First Seen: {}  Last Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
 
     put_logs(session['logs_client'], logGroupName, logStreamName, message)  
