@@ -32,11 +32,15 @@ jobs:
 
   test_lambda:
     name: 'test a lambda function'
+    needs: deploy_lambda
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       - name: test a lambda function(shared accounts)
         run: aws lambda invoke --function-name lv-security-lambda-security-alert-dev --payload fileb://test_payload_777777777777.json response.json
 
