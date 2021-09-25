@@ -4,6 +4,7 @@ import json
 import os
 import time
 import datetime
+import re
 import logging
 import boto3
 
@@ -11,23 +12,47 @@ import boto3
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
+# shared accounts
+shared_accounts_list = [
+    "777777777777"
+]
+
+# Slack channel name
+slack_channel_name_list = {
+    "shared": "lv-shared-aws-secalerts",
+    "other":  "lv-other-aws-secalerts"
+}
+
+# ----------------------------------------
+# Set debug mode
+if os.environ['DEBUG'].lower() != "true":
+    DEBUG = False
+else:
+    DEBUG = True
+
+# Set logging mode, log group and log stream
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+if DEBUG:
+    logger.setLevel(logging.INFO)
+else:
+    logger.setLevel(logging.WARNING)
 
 logGroupName  = os.environ['LOG_GROUP']
-logStreamName = datetime.datetime.now().strftime('%Y%m%d')
-  
+logStreamName = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=+9), 'JST')).strftime('%Y%m%d')
+
+
+#----------------------------------------
+# Main
+#----------------------------------------
 def lambda_handler(event, context):
 
-    #----------------------------------------
-    # Initialize
-    #----------------------------------------
     #Check if the event is a security hub finding
-    logger.debug("{0}".format( json.dumps(event)))
+    logger.warning("{0}".format( json.dumps(event)))
     if event['source'] != 'aws.securityhub':
         logger.error('This event is not a SecurityHub event')
-        return
+        return { 'statusCode': 400 }
     finding_info = get_securityhub_finding(event)
+    logger.info(json.dumps(finding_info))
 
     #Get Session
     session = {
@@ -35,61 +60,86 @@ def lambda_handler(event, context):
         'slack_client': WebClient( token=os.environ['SLACK_TOKEN'] )
     }
 
-    #----------------------------------------
     # Identify the channel to send
-    #----------------------------------------
+    channel_name = detect_slack_channel(session, finding_info)
+    publish_message(session, channel_name, finding_info)
 
 
 
+    #success
+    return { 'statusCode': 200 }
 
-    #----------------------------------------
-    # Send Message
-    #----------------------------------------
-    publish_message(session, "for-test", finding_info )
-
-
-    #ret = slack_client.chat_postMessage(channel="for-test", text="Hello world")
-    #put_logs(logs_client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(event)))
-
-
-
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Hello from Lambda!')
-    }
-
-
+#----------------------------------------
+# Functions
+#----------------------------------------
+# Extraction of necessary information
 def get_securityhub_finding(event):
+    finding = event['detail']['findings'][0]
     ret = {
         'detail-type':  event['detail-type'],
-        'region':       event['detail']['findings'][0]['Region'],
-        'AwsAccountId': event['detail']['findings'][0]['AwsAccountId'],
-        'Title':        event['detail']['findings'][0]['Title'],
-        'Description':  event['detail']['findings'][0]['Description'],
-        'Types':        event['detail']['findings'][0]['FindingProviderFields']['Types'][0],
-        'FirstSeen':    event['detail']['findings'][0]['FirstObservedAt'],
-        'LastSeen':     event['detail']['findings'][0]['LastObservedAt'],
-        'Resource':     event['detail']['findings'][0]['ProductFields']['Resources:0/Id'],
-        'Severity':     event['detail']['findings'][0]['FindingProviderFields']['Severity']['Label']
+        'region':       finding['Region'],
+        'AwsAccountId': finding['AwsAccountId'],
+        'Title':        finding['Title'],
+        'Description':  finding['Description'],
+        'Types':        finding['FindingProviderFields']['Types'][0],
+        'FirstSeen':    finding['FirstObservedAt'],
+        'LastSeen':     finding['LastObservedAt'],
+        'Resource':     finding['ProductFields']['Resources:0/Id'],
+        'Severity':     finding['FindingProviderFields']['Severity']['Label']
     }
     return ret
 
 
+# Identify the slack channel to send security alert.
+def detect_slack_channel(session, finding_info):
+    accountid = finding_info['AwsAccountId']
+
+    #check shared accounts
+    for i in shared_accounts_list:
+        logger.info( "shared account check: finding's account: {} check account: {}".format(accountid, i) )
+        if accountid == i:
+            logger.warning( "shared account check: detect account: {}".format(i) )
+            return slack_channel_name_list['shared']
+    
+    #check resource accounts
+    channels = session['slack_client'].conversations_list(
+        limit=1000,
+        exclude_archived = True
+    )
+    for ch in channels['channels']:
+        ch_name = ch['name']
+        logger.info( "resource account check: finding's account: {} slack channel: {}".format(accountid, ch_name) )
+        channel_awsid = "NA"
+        match = re.search(r'.*([0-9]{12})$', ch_name)
+        if match:
+            channel_awsid = match.groups()[0]
+            if accountid == channel_awsid:
+                logger.warning( "resource account check: detect account: channel is {}".format(ch_name) )
+                return ch_name
+
+    #other
+    logger.warning( "not found slack channel: set the other channel({})".format(slack_channel_name_list['other']) )
+    return slack_channel_name_list['other']
+
+
+# Publish message to specifed slack channel and logs
+# (In dry-run mode, write only to logs)
 def publish_message(session, channel, finding):
     message = '{}|{}|Account: {}\n'.format( finding['detail-type'], finding['region'], finding['AwsAccountId'] ) + \
-              '{}\n\n{}\n\nFinding Type: {}\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
-              'First Seen: {}  Last Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
+              '{}\n\n{}\n\nFinding Type: {}\n\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
+              'First Seen: {}\nLast Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
 
-    put_logs(session['logs_client'], logGroupName, logStreamName, message)  
-    if os.environ['DRY_RUN'].lower != "true":
+    logger.warning("slack channel: {}\nmessage: {}".format(channel, message))
+    put_logs(session['logs_client'], logGroupName, logStreamName, "slack channel: {}\nmessage: {}".format(channel, message))  
+    if not DEBUG:
         try:
-            ret = session['slack_client'].chat_postMessage(channel=channel, text=message)
+            session['slack_client'].chat_postMessage(channel=channel, text=message)
         except SlackApiError as e:
             logger.error( e.response["error"] )
-    
-    return ret
+    return
 
 
+# Write message to  specifed CloudWatch Logs log group
 def put_logs(client, group_name, stream_name_prefix, message):
     try:
         #Set Logs Event Data
@@ -140,9 +190,9 @@ def put_logs(client, group_name, stream_name_prefix, message):
             except client.exceptions.InvalidSequenceTokenException as e:
                 sequence_token = e.response.get('expectedSequenceToken')
             except Exception as e:
-                print(e)
+                logger.error(e)
             
             if break_loop:
                 break
     except Exception as e:
-        print(e)
+        logger.error(e)
