@@ -41,20 +41,3 @@ jobs:
 
       - name: test a lambda function(resource accounts)
         run: aws lambda invoke --function-name lv-security-lambda-security-alert-dev --payload fileb://test_payload_999999999999.json response.json
-
-      - name: Create a pull request merging to main branch
-        uses: actions/github-script@v2
-        env:
-          BRANCH: ${{ steps.get_branch.outputs.BRANCH }}
-          VERSION: ${{ steps.bump_version.outputs.VERSION }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `chore(*): bump v${process.env.VERSION}`,
-              body: `version: ${process.env.BRANCH}`,
-              head: process.env.BRANCH,
-              base: "production"
-            })
