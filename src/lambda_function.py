@@ -11,12 +11,25 @@ import boto3
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
+# shared accounts
+shared_accounts_list = [
+    "777777777777"
+]
+
+# slack channel name
+slack_channel_name_list = {
+    "shared": "lv-shared-aws-secalerts",
+    "other":  "lv-other-aws-secalerts"
+}
+
+
+# log setting
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 logGroupName  = os.environ['LOG_GROUP']
 logStreamName = datetime.datetime.now().strftime('%Y%m%d')
-  
+
 def lambda_handler(event, context):
 
     #----------------------------------------
@@ -38,7 +51,7 @@ def lambda_handler(event, context):
     #----------------------------------------
     # Identify the channel to send
     #----------------------------------------
-
+    channel_name = detect_slack_channel(session, finding_info)
 
 
 
@@ -77,6 +90,24 @@ def get_securityhub_finding(event):
     }
     return ret
 
+
+#
+def detect_slack_channel(session, finding_info):
+    accountid = finding_info['AwsAccountId']
+
+    #check shared account
+    for i in shared_accounts_list:
+        logger.debug( "shared account check: finding's account: {} check account: {}".format(accountid, i) )
+        if accountid == i:
+            logger.debug( "shared account check: detect account: {}".format(i) )
+            return slack_channel_name_list['shared']
+    
+    #check
+
+    #other
+    return slack_channel_name_list['other']
+
+
 # Publish message to specifed slack channel and logs
 # (In dry-run mode, write only to logs)
 def publish_message(session, channel, finding):
@@ -91,6 +122,7 @@ def publish_message(session, channel, finding):
         except SlackApiError as e:
             logger.error( e.response["error"] )
     return
+
 
 # Write message to  specifed CloudWatch Logs log group
 def put_logs(client, group_name, stream_name_prefix, message):
