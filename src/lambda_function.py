@@ -48,7 +48,7 @@ def lambda_handler(event, context):
     logger.info("{0}".format( json.dumps(event)))
     if event['source'] != 'aws.securityhub':
         logger.error('This event is not a SecurityHub event')
-        return
+        return { 'statusCode': 400 }
     finding_info = get_securityhub_finding(event)
     logger.info(finding_info)
 
