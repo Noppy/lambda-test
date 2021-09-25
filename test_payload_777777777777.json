@@ -1,0 +1,116 @@
+{
+  "version": "0",
+  "id": "c3d17546-980a-e3c1-b579-6ab9285ad18f",
+  "detail-type": "Security Hub Findings - Imported",
+  "source": "aws.securityhub",
+  "account": "777777777777",
+  "time": "2021-09-24T02:27:15Z",
+  "region": "ap-northeast-1",
+  "resources": [
+      "arn:aws:securityhub:ap-northeast-1::product/aws/securityhub/arn:aws:securityhub:ap-northeast-1:777777777777:subscription/cis-aws-foundations-benchmark/v/1.2.0/4.3/finding/963f1a7d-b9eb-45e4-9f34-272f3fdc6fb4"
+  ],
+  "detail": {
+      "findings": [
+          {
+              "ProductArn": "arn:aws:securityhub:ap-northeast-1::product/aws/securityhub",
+              "Types": [
+                  "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+              ],
+              "Description": "A VPC comes with a default security group whose initial settings deny all inbound traffic, allow all outbound traffic, and allow all traffic between instances assigned to the security group. If you don't specify a security group when you launch an instance, the instance is automatically assigned to this default security group. It is recommended that the default security group restrict all traffic.",
+              "Compliance": {
+                  "Status": "FAILED"
+              },
+              "ProductName": "Security Hub",
+              "FirstObservedAt": "2021-09-24T02:27:04.032Z",
+              "CreatedAt": "2021-09-24T02:27:04.032Z",
+              "LastObservedAt": "2021-09-24T02:27:09.831Z",
+              "CompanyName": "AWS",
+              "FindingProviderFields": {
+                  "Types": [
+                      "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+                  ],
+                  "Severity": {
+                      "Normalized": 70,
+                      "Label": "HIGH",
+                      "Product": 70,
+                      "Original": "HIGH"
+                  }
+              },
+              "ProductFields": {
+                  "StandardsGuideArn": "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0",
+                  "StandardsGuideSubscriptionArn": "arn:aws:securityhub:ap-northeast-1:777777777777:subscription/cis-aws-foundations-benchmark/v/1.2.0",
+                  "RuleId": "4.3",
+                  "RecommendationUrl": "https://docs.aws.amazon.com/console/securityhub/standards-cis-4.3/remediation",
+                  "RelatedAWSResources:0/name": "securityhub-vpc-default-security-group-closed-80802dc1",
+                  "RelatedAWSResources:0/type": "AWS::Config::ConfigRule",
+                  "StandardsControlArn": "arn:aws:securityhub:ap-northeast-1:777777777777:control/cis-aws-foundations-benchmark/v/1.2.0/4.3",
+                  "aws/securityhub/ProductName": "Security Hub",
+                  "aws/securityhub/CompanyName": "AWS",
+                  "Resources:0/Id": "arn:aws:ec2:ap-northeast-1:777777777777:security-group/sg-05814215b0db511a5",
+                  "aws/securityhub/FindingId": "arn:aws:securityhub:ap-northeast-1::product/aws/securityhub/arn:aws:securityhub:ap-northeast-1:777777777777:subscription/cis-aws-foundations-benchmark/v/1.2.0/4.3/finding/963f1a7d-b9eb-45e4-9f34-272f3fdc6fb4"
+              },
+              "Remediation": {
+                  "Recommendation": {
+                      "Text": "For directions on how to fix this issue, consult the AWS Security Hub CIS documentation.",
+                      "Url": "https://docs.aws.amazon.com/console/securityhub/standards-cis-4.3/remediation"
+                  }
+              },
+              "SchemaVersion": "2018-10-08",
+              "GeneratorId": "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0/rule/4.3",
+              "RecordState": "ACTIVE",
+              "Title": "4.3 Ensure the default security group of every VPC restricts all traffic",
+              "Workflow": {
+                  "Status": "NEW"
+              },
+              "Severity": {
+                  "Normalized": 70,
+                  "Label": "HIGH",
+                  "Product": 70,
+                  "Original": "HIGH"
+              },
+              "UpdatedAt": "2021-09-24T02:27:04.032Z",
+              "WorkflowState": "NEW",
+              "AwsAccountId": "777777777777",
+              "Region": "ap-northeast-1",
+              "Id": "arn:aws:securityhub:ap-northeast-1:777777777777:subscription/cis-aws-foundations-benchmark/v/1.2.0/4.3/finding/963f1a7d-b9eb-45e4-9f34-272f3fdc6fb4",
+              "Resources": [
+                  {
+                      "Partition": "aws",
+                      "Type": "AwsEc2SecurityGroup",
+                      "Details": {
+                          "AwsEc2SecurityGroup": {
+                              "GroupName": "default",
+                              "OwnerId": "777777777777",
+                              "VpcId": "vpc-07886ac04bf0a934f",
+                              "IpPermissions": [
+                                  {
+                                      "IpProtocol": "-1",
+                                      "UserIdGroupPairs": [
+                                          {
+                                              "UserId": "777777777777",
+                                              "GroupId": "sg-05814215b0db511a5"
+                                          }
+                                      ]
+                                  }
+                              ],
+                              "IpPermissionsEgress": [
+                                  {
+                                      "IpProtocol": "-1",
+                                      "IpRanges": [
+                                          {
+                                              "CidrIp": "0.0.0.0/0"
+                                          }
+                                      ]
+                                  }
+                              ],
+                              "GroupId": "sg-05814215b0db511a5"
+                          }
+                      },
+                      "Region": "ap-northeast-1",
+                      "Id": "arn:aws:ec2:ap-northeast-1:777777777777:security-group/sg-05814215b0db511a5"
+                  }
+              ]
+          }
+      ]
+  }
+}

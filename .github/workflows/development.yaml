@@ -1,4 +1,4 @@
-name: 'Terraform for development'
+name: 'lambda CICD(development)'
 on:
   push:
     branches:
@@ -14,7 +14,7 @@ jobs:
       run:
         shell: bash
     env:
-      LlambdaFunctionName: "lv-security-lambda-security-alert-prod"
+      LambdaFunctionName: "lv-security-lambda-security-alert-dev"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -28,7 +28,16 @@ jobs:
 
       - name: create zip
         working-directory: src
-        run: zip -r ../package.zip ./*
+        run: zip -r ../package.zip .
 
       - name: update function code
-        run: aws lambda update-function-code --function-name ${{LlambdaFunctionName}} --zip-file file://package.zip --no-publish
+        run: aws lambda update-function-code --function-name ${{env.LambdaFunctionName}} --zip-file fileb://package.zip --no-publish
+
+      - name: test a lambda function(shared accounts)
+        run: aws lambda invoke --function-name lv-security-lambda-security-alert-dev --payload fileb://test_payload_777777777777.json response.json
+
+      - name: test a lambda function(other accounts)
+        run: aws lambda invoke --function-name lv-security-lambda-security-alert-dev --payload fileb://test_payload_888888888888.json response.json
+
+      - name: test a lambda function(resource accounts)
+        run: aws lambda invoke --function-name lv-security-lambda-security-alert-dev --payload fileb://test_payload_999999999999.json response.json
