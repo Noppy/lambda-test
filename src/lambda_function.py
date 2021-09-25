@@ -114,7 +114,7 @@ def detect_slack_channel(session, finding_info):
         if match:
             channel_awsid = match.groups()[0]
             if accountid == channel_awsid:
-                logger.warning( "resource account check: detect account: {}".format(ch_name) )
+                logger.warning( "resource account check: detect account: channel is {}".format(ch_name) )
                 return ch_name
 
     #other
@@ -129,6 +129,7 @@ def publish_message(session, channel, finding):
               '{}\n\n{}\n\nFinding Type: {}\n\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
               'First Seen: {}\nLast Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
 
+    logger.warning("slack channel: {}\nmessage: {}".format(channel, message))
     put_logs(session['logs_client'], logGroupName, logStreamName, "slack channel: {}\nmessage: {}".format(channel, message))  
     if not DEBUG:
         try:
