@@ -4,6 +4,7 @@ import json
 import os
 import time
 import datetime
+import re
 import logging
 import boto3
 
@@ -39,11 +40,11 @@ else:
 logGroupName  = os.environ['LOG_GROUP']
 logStreamName = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=+9), 'JST')).strftime('%Y%m%d')
 
-def lambda_handler(event, context):
 
-    #----------------------------------------
-    # Initialize
-    #----------------------------------------
+#----------------------------------------
+# Main
+#----------------------------------------
+def lambda_handler(event, context):
     #Check if the event is a security hub finding
     logger.info("{0}".format( json.dumps(event)))
     if event['source'] != 'aws.securityhub':
@@ -58,24 +59,14 @@ def lambda_handler(event, context):
         'slack_client': WebClient( token=os.environ['SLACK_TOKEN'] )
     }
 
-    #----------------------------------------
     # Identify the channel to send
-    #----------------------------------------
     channel_name = detect_slack_channel(session, finding_info)
-
-    return { 'statusCode': 400 }
-
-    #----------------------------------------
-    # Send Message
-    #----------------------------------------
     publish_message(session, channel_name, finding_info)
 
 
 
     #success
-    return {
-        'statusCode': 200
-    }
+    return { 'statusCode': 200 }
 
 #----------------------------------------
 # Functions
@@ -98,20 +89,34 @@ def get_securityhub_finding(event):
     return ret
 
 
-#
+# Identify the slack channel to send security alert.
 def detect_slack_channel(session, finding_info):
     accountid = finding_info['AwsAccountId']
 
-    #check shared account
+    #check shared accounts
     for i in shared_accounts_list:
         logger.info( "shared account check: finding's account: {} check account: {}".format(accountid, i) )
         if accountid == i:
             logger.info( "shared account check: detect account: {}".format(i) )
             return slack_channel_name_list['shared']
     
-    #check
+    #check resource accounts
+    channels = session['slack_client'].conversations_list(
+        limit=1000,
+        exclude_archived = True
+    )
+    for ch in channels:
+        logger.info( "resource account check: inding's account: {} slack channel: {}".format(accountid, ch) )
+        channel_awsid = "NA"
+        match = re.search(r'.*([0-9]{12})$', ch)
+        if match:
+            channel_awsid = match.groups()[0]
+            if accountid == channel_awsid:
+                logger.info( "resource account check: detect account: {}".format(ch) )
+                return ch
 
     #other
+    logger.info( "not found slack channel: set the other channel" )
     return slack_channel_name_list['other']
 
 
