@@ -67,15 +67,15 @@ def lambda_handler(event, context):
 def get_securityhub_finding(event):
     ret = {
         'detail-type':  event['detail-type'],
-        'region':       event['detail'][0]['findings']['Region'],
-        'AwsAccountId': event['detail'][0]['findings']['AwsAccountId'],
-        'Title':        event['detail'][0]['findings']['Title'],
-        'Description':  event['detail'][0]['findings']['Description'],
-        'Types':        event['detail'][0]['findings']['FindingProviderFields']['Types'][0],
-        'FirstSeen':    event['detail'][0]['findings']['FirstObservedAt'],
-        'LastSeen':     event['detail'][0]['findings']['LastObservedAt'],
-        'Resource':     event['detail'][0]['findings']['ProductFields']['Resources:0/Id'],
-        'Severity':     event['detail'][0]['findings']['FindingProviderFields']['Severity']['Label']
+        'region':       event['detail']['findings'][0]['Region'],
+        'AwsAccountId': event['detail']['findings'][0]['AwsAccountId'],
+        'Title':        event['detail']['findings'][0]['Title'],
+        'Description':  event['detail']['findings'][0]['Description'],
+        'Types':        event['detail']['findings'][0]['FindingProviderFields']['Types'][0],
+        'FirstSeen':    event['detail']['findings'][0]['FirstObservedAt'],
+        'LastSeen':     event['detail']['findings'][0]['LastObservedAt'],
+        'Resource':     event['detail']['findings'][0]['ProductFields']['Resources:0/Id'],
+        'Severity':     event['detail']['findings'][0]['FindingProviderFields']['Severity']['Label']
     }
     return ret
 
