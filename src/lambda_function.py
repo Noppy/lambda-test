@@ -14,50 +14,80 @@ from slack_sdk.errors import SlackApiError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-
-logGroupName = "security-alaert"
-logStreamName = "development"
+logGroupName  = os.environ['LOG_GROUP']
+logStreamName = datetime.datetime.now().strftime('%Y%m%d')
   
 def lambda_handler(event, context):
 
     #----------------------------------------
     # Initialize
     #----------------------------------------
-    #Set parameters from environment values
-    if os.environ['DRY_RUN'].lower == "true":
-        dry_run = True
-    else:
-        dry_run = False
-    slack_token   = os.environ['SLACK_TOKEN'] 
-    logGroupName  = os.environ['LOG_GROUP']
-    logStreamName = datetime.datetime.now().strftime('%Y%m%d')
+    #Check if the event is a security hub finding
+    logger.debug("{0}".format( json.dumps(event)))
+    if event['source'] != 'aws.securityhub':
+        logger.error('This event is not a SecurityHub event')
+        return
+    finding_info = get_securityhub_finding(event)
 
     #Get Session
-    logs_client = boto3.client('logs')
-    slack_client = WebClient( token=os.environ['SLACK_TOKEN'] )
+    session = {
+        'logs_client':  boto3.client('logs'),
+        'slack_client': WebClient( token=os.environ['SLACK_TOKEN'] )
+    }
 
     #----------------------------------------
     # Identify the channel to send
     #----------------------------------------
 
+
+
+
     #----------------------------------------
     # Send Message
     #----------------------------------------
-    ret = slack_client.chat_postMessage(channel="for-test", text="Hello world")
-    put_logs(logs_client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(event)))
+    publish_message(session, "for-test", finding_info )
 
 
+    #ret = slack_client.chat_postMessage(channel="for-test", text="Hello world")
+    #put_logs(logs_client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(event)))
 
 
-
-
-    #Put Log Event
-    
 
     return {
         'statusCode': 200,
         'body': json.dumps('Hello from Lambda!')
     }
+
+
+def get_securityhub_finding(event):
+    ret = {
+        'detail-type':  event['detail-type'],
+        'region':       event['detail']['findings'][0]['Region'],
+        'AwsAccountId': event['detail']['findings'][0]['AwsAccountId'],
+        'Title':        event['detail']['findings'][0]['Title'],
+        'Description':  event['detail']['findings'][0]['Description'],
+        'Types':        event['detail']['findings'][0]['FindingProviderFields']['Types'][0],
+        'FirstSeen':    event['detail']['findings'][0]['FirstObservedAt'],
+        'LastSeen':     event['detail']['findings'][0]['LastObservedAt'],
+        'Resource':     event['detail']['findings'][0]['ProductFields']['Resources:0/Id'],
+        'Severity':     event['detail']['findings'][0]['FindingProviderFields']['Severity']['Label']
+    }
+    return ret
+
+
+def publish_message(session, channel, finding):
+    message = '{}|{}|Account: {}\n'.format( finding['detail-type'], finding['region'], finding['AwsAccountId'] ) + \
+              '{}\n\n{}\n\nFinding Type: {}\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
+              'First Seen: {}  Last Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
+
+    put_logs(session['logs_client'], logGroupName, logStreamName, message)  
+    if os.environ['DRY_RUN'].lower != "true":
+        try:
+            ret = session['slack_client'].chat_postMessage(channel=channel, text=message)
+        except SlackApiError as e:
+            logger.error( e.response["error"] )
+    
+    return ret
 
 
 def put_logs(client, group_name, stream_name_prefix, message):
