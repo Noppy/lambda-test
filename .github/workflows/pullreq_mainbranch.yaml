@@ -54,5 +54,5 @@ jobs:
       #- name: "TEST: Resource accounts security alert test."
       #  run: aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_888888888888.json response.json
 
-      #- name: "TEST: other accounts security alert test."
-      #  run: aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_999999999999.json response.json
+      - name: "TEST: other accounts security alert test."
+        run: aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_999999999999.json response.json

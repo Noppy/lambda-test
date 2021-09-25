@@ -16,19 +16,20 @@ shared_accounts_list = [
     "777777777777"
 ]
 
-# slack channel name
+# Slack channel name
 slack_channel_name_list = {
     "shared": "lv-shared-aws-secalerts",
     "other":  "lv-other-aws-secalerts"
 }
 
-# set debug mode
+# ----------------------------------------
+# Set debug mode
 if os.environ['DEBUG'].lower() != "true":
     DEBUG = False
 else:
     DEBUG = True
 
-# log setting
+# Set logging mode, log group and log stream
 logger = logging.getLogger()
 if DEBUG:
     logger.setLevel(logging.INFO)
@@ -67,11 +68,8 @@ def lambda_handler(event, context):
     #----------------------------------------
     # Send Message
     #----------------------------------------
-    publish_message(session, "for-test", finding_info)
+    publish_message(session, channel_name, finding_info)
 
-
-    #ret = slack_client.chat_postMessage(channel="for-test", text="Hello world")
-    #put_logs(logs_client, logGroupName, logStreamName, "Received event:{0}".format( json.dumps(event)))
 
 
     #success
@@ -124,7 +122,7 @@ def publish_message(session, channel, finding):
               '{}\n\n{}\n\nFinding Type: {}\n\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
               'First Seen: {}\nLast Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
 
-    put_logs(session['logs_client'], logGroupName, logStreamName, "slack channel: {}\message: {}".format(channel, message))  
+    put_logs(session['logs_client'], logGroupName, logStreamName, "slack channel: {}\nmessage: {}".format(channel, message))  
     if not DEBUG:
         try:
             session['slack_client'].chat_postMessage(channel=channel, text=message)
