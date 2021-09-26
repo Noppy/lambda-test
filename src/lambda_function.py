@@ -6,6 +6,7 @@ import time
 import datetime
 import re
 import logging
+import botocore
 import boto3
 
 # Import Bolt for Python (github.com/slackapi/bolt-python)
@@ -98,8 +99,8 @@ def get_slack_token(key=''):
             Name           = key,
             WithDecryption = True
         )
-    except client.exceptions as e:
-        logger.error(e)
+    except botocore.exceptions.ClientError as e:
+        logger.error(e.response)
         raise
     return ret['Parameter']['Value']
 
