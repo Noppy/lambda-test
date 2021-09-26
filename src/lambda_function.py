@@ -77,7 +77,6 @@ def get_securityhub_finding(event):
     finding = event['detail']['findings'][0]
     ret = {
         'detail-type':  event['detail-type'],
-        'arn':          event['resources'],
         'region':       finding['Region'],
         'AwsAccountId': finding['AwsAccountId'],
         'Title':        finding['Title'],
@@ -126,10 +125,12 @@ def detect_slack_channel(session, finding_info):
 # Publish message to specifed slack channel and logs
 # (In dry-run mode, write only to logs)
 def publish_message(session, channel, finding):
-    message = '[{}|{}|Account: {}]({})\n'.format( finding['detail-type'], finding['region'], finding['AwsAccountId'], finding['arn'] ) + \
+    # Create message
+    message = '*{}|{}|Account: {}*\n'.format( finding['detail-type'], finding['region'], finding['AwsAccountId'] ) + \
               '*{}*\n\n{}\n\nFinding Type: {}\n\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
-              'First Seen: {}\nLast Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
+              'First Seen: `{}`\nLast Seen: `{}`\nAffected Resource: `{}`\nSeverity: `{}`'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
 
+    # Publish message
     logger.warning("slack channel: {}\nmessage: {}".format(channel, message))
     put_logs(session['logs_client'], logGroupName, logStreamName, "slack channel: {}\nmessage: {}".format(channel, message))  
     if not DEBUG:
