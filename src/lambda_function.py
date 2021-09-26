@@ -58,8 +58,8 @@ def lambda_handler(event, context):
 
     # Get sessions
     session = {
-        'logs_client':  boto3.client('logs'),
-        'slack_client': WebClient( token=os.environ['SLACK_TOKEN'] )
+        'logs':  boto3.client('logs'),
+        'slack': WebClient( get_slack_token('aaa') )
     }
 
     # Identify the channel to send, and publish a message
@@ -90,6 +90,15 @@ def get_securityhub_finding(event):
     return ret
 
 
+# Get SLACK_TOKEN to Systems Manager parameter store
+def get_slack_token(key=''):
+    client = boto3.client('ssm')
+    ret = client.get_paramet(
+        Names = [ key ],
+        WithDecryption = True
+    )
+    return ret['Parameters'][0]['Value']
+
 # Identify the slack channel to send security alert.
 def detect_slack_channel(session, finding_info):
     accountid = finding_info['AwsAccountId']
@@ -102,7 +111,7 @@ def detect_slack_channel(session, finding_info):
             return slack_channel_name_list['shared']
     
     #check resource accounts
-    channels = session['slack_client'].conversations_list(
+    channels = session['slack'].conversations_list(
         limit=1000,
         exclude_archived = True
     )
@@ -132,10 +141,10 @@ def publish_message(session, channel, finding):
 
     # Publish message
     logger.warning("slack channel: {}\nmessage: {}".format(channel, message))
-    put_logs(session['logs_client'], logGroupName, logStreamName, "slack channel: {}\nmessage: {}".format(channel, message))  
+    put_logs(session['logs'], logGroupName, logStreamName, "slack channel: {}\nmessage: {}".format(channel, message))  
     if not DEBUG:
         try:
-            session['slack_client'].chat_postMessage(channel=channel, text=message)
+            session['slack'].chat_postMessage(channel=channel, text=message)
         except SlackApiError as e:
             logger.error( e.response["error"] )
     return
