@@ -116,10 +116,14 @@ def detect_slack_channel(session, finding_info):
             return slack_channel_name_list['shared']
     
     #check resource accounts
-    channels = session['slack'].conversations_list(
-        limit=1000,
-        exclude_archived = True
-    )
+    try:
+        channels = session['slack'].conversations_list(
+            limit=1000,
+            exclude_archived = True
+        )
+    except SlackApiError as e:
+        raise e
+
     for ch in channels['channels']:
         ch_name = ch['name']
         logger.info( "resource account check: finding's account: {} slack channel: {}".format(accountid, ch_name) )
@@ -151,7 +155,7 @@ def publish_message(session, channel, finding):
         try:
             session['slack'].chat_postMessage(channel=channel, text=message)
         except SlackApiError as e:
-            logger.error( e.response["error"] )
+            raise e
     return
 
 
