@@ -100,8 +100,7 @@ def get_slack_token(key=''):
             WithDecryption = True
         )
     except botocore.exceptions.ClientError as e:
-        logger.error(e.response)
-        raise
+        raise e
     return ret['Parameter']['Value']
 
 
