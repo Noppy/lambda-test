@@ -94,10 +94,11 @@ def get_securityhub_finding(event):
 def get_slack_token(key=''):
     client = boto3.client('ssm')
     ret = client.get_parameter(
-        Names = key,
+        Name           = key,
         WithDecryption = True
     )
     return ret['Parameter']['Value']
+
 
 # Identify the slack channel to send security alert.
 def detect_slack_channel(session, finding_info):
