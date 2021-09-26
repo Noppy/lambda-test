@@ -128,5 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-response.json
-hoge.py
+response*.json

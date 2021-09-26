@@ -6,6 +6,7 @@ import time
 import datetime
 import re
 import logging
+import botocore
 import boto3
 
 # Import Bolt for Python (github.com/slackapi/bolt-python)
@@ -23,7 +24,6 @@ slack_channel_name_list = {
     "other":  "lv-other-aws-secalerts"
 }
 
-# ----------------------------------------
 # Set debug mode
 if os.environ['DEBUG'].lower() != "true":
     DEBUG = False
@@ -46,25 +46,25 @@ logStreamName = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours
 #----------------------------------------
 def lambda_handler(event, context):
 
-    #Check if the event is a security hub finding
+    # Check if the event is a security hub finding
     logger.warning("{0}".format( json.dumps(event)))
     if event['source'] != 'aws.securityhub':
         logger.error('This event is not a SecurityHub event')
         return { 'statusCode': 400 }
+    
+    # Extract necessary information
     finding_info = get_securityhub_finding(event)
     logger.info(json.dumps(finding_info))
 
-    #Get Session
+    # Get sessions
     session = {
-        'logs_client':  boto3.client('logs'),
-        'slack_client': WebClient( token=os.environ['SLACK_TOKEN'] )
+        'logs':  boto3.client('logs'),
+        'slack': WebClient( get_slack_token(os.environ['SLACK_TOKEN_PARAMETER_STORE_KEY']) )
     }
 
-    # Identify the channel to send
+    # Identify the channel to send, and publish a message
     channel_name = detect_slack_channel(session, finding_info)
     publish_message(session, channel_name, finding_info)
-
-
 
     #success
     return { 'statusCode': 200 }
@@ -72,7 +72,7 @@ def lambda_handler(event, context):
 #----------------------------------------
 # Functions
 #----------------------------------------
-# Extraction of necessary information
+# Extract necessary information
 def get_securityhub_finding(event):
     finding = event['detail']['findings'][0]
     ret = {
@@ -90,6 +90,19 @@ def get_securityhub_finding(event):
     return ret
 
 
+# Get SLACK_TOKEN to Systems Manager parameter store
+def get_slack_token(key):
+    client = boto3.client('ssm')
+    try:
+        ret = client.get_parameter(
+            Name           = key,
+            WithDecryption = True
+        )
+    except botocore.exceptions.ClientError as e:
+        raise e
+    return ret['Parameter']['Value']
+
+
 # Identify the slack channel to send security alert.
 def detect_slack_channel(session, finding_info):
     accountid = finding_info['AwsAccountId']
@@ -102,10 +115,14 @@ def detect_slack_channel(session, finding_info):
             return slack_channel_name_list['shared']
     
     #check resource accounts
-    channels = session['slack_client'].conversations_list(
-        limit=1000,
-        exclude_archived = True
-    )
+    try:
+        channels = session['slack'].conversations_list(
+            limit=1000,
+            exclude_archived = True
+        )
+    except SlackApiError as e:
+        raise e
+
     for ch in channels['channels']:
         ch_name = ch['name']
         logger.info( "resource account check: finding's account: {} slack channel: {}".format(accountid, ch_name) )
@@ -117,7 +134,7 @@ def detect_slack_channel(session, finding_info):
                 logger.warning( "resource account check: detect account: channel is {}".format(ch_name) )
                 return ch_name
 
-    #other
+    #other accounts
     logger.warning( "not found slack channel: set the other channel({})".format(slack_channel_name_list['other']) )
     return slack_channel_name_list['other']
 
@@ -125,21 +142,23 @@ def detect_slack_channel(session, finding_info):
 # Publish message to specifed slack channel and logs
 # (In dry-run mode, write only to logs)
 def publish_message(session, channel, finding):
-    message = '{}|{}|Account: {}\n'.format( finding['detail-type'], finding['region'], finding['AwsAccountId'] ) + \
-              '{}\n\n{}\n\nFinding Type: {}\n\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
-              'First Seen: {}\nLast Seen: {}\nAffected Resource: {}\nSeverity: {}'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
+    # Create message
+    message = '*{}|{}|Account: {}*\n'.format( finding['detail-type'], finding['region'], finding['AwsAccountId'] ) + \
+              '*{}*\n\n{}\n\nFinding Type: {}\n\n'.format( finding['Title'], finding['Description'], finding['Types']) + \
+              'First Seen: `{}`\nLast Seen: `{}`\nAffected Resource: `{}`\nSeverity: `{}`'.format( finding['FirstSeen'], finding['LastSeen'], finding['Resource'], finding['Severity'] )
 
+    # Publish message
     logger.warning("slack channel: {}\nmessage: {}".format(channel, message))
-    put_logs(session['logs_client'], logGroupName, logStreamName, "slack channel: {}\nmessage: {}".format(channel, message))  
+    put_logs(session['logs'], logGroupName, logStreamName, "slack channel: {}\nmessage: {}".format(channel, message))  
     if not DEBUG:
         try:
-            session['slack_client'].chat_postMessage(channel=channel, text=message)
+            session['slack'].chat_postMessage(channel=channel, text=message)
         except SlackApiError as e:
-            logger.error( e.response["error"] )
+            raise e
     return
 
 
-# Write message to  specifed CloudWatch Logs log group
+# Write message to specifed log group
 def put_logs(client, group_name, stream_name_prefix, message):
     try:
         #Set Logs Event Data
