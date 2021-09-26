@@ -98,7 +98,7 @@ def get_slack_token(key=''):
             Name           = key,
             WithDecryption = True
         )
-    except Exception as e:
+    except client.exceptions as e:
         logger.error(e)
         raise
     return ret['Parameter']['Value']
