@@ -59,7 +59,7 @@ def lambda_handler(event, context):
     # Get sessions
     session = {
         'logs':  boto3.client('logs'),
-        'slack': WebClient( get_slack_token('aaa') )
+        'slack': WebClient( get_slack_token('lv-security-lambda-security-alert-slack-token') )
     }
 
     # Identify the channel to send, and publish a message
