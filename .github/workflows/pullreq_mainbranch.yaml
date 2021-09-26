@@ -50,16 +50,16 @@ jobs:
 
       - name: "TEST: shared accounts security alert test."
         run: |
-          aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_777777777777.json response.json
-          echo "response.json" && cat response.json
-          grep 200 response.json
+          aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_777777777777.json response1.json
+          echo "response1.json" && cat response1.json
+          grep 200 response1.json
       - name: "TEST: Resource accounts security alert test."
         run: |
-          aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_888888888888.json response.json
-          echo "response.json" && cat response.json
-          grep 200 response.json
+          aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_888888888888.json response2.json
+          echo "response2.json" && cat response2.json
+          grep 200 response2.json
       - name: "TEST: other accounts security alert test."
         run: |
-          aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_999999999999.json response.json
-          echo "response.json" && cat response.json
-          grep 200 response.json
+          aws lambda invoke --function-name ${{env.LambdaFunctionName}} --payload fileb://test_resuces/test_payload_999999999999.json response3.json
+          echo "response3.json" && cat response3.json
+          grep 200 response3.json

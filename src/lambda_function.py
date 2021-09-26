@@ -23,7 +23,7 @@ slack_channel_name_list = {
     "other":  "lv-other-aws-secalerts"
 }
 
-# ----------------------------------------
+
 # Set debug mode
 if os.environ['DEBUG'].lower() != "true":
     DEBUG = False
@@ -46,25 +46,25 @@ logStreamName = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours
 #----------------------------------------
 def lambda_handler(event, context):
 
-    #Check if the event is a security hub finding
+    # Check if the event is a security hub finding
     logger.warning("{0}".format( json.dumps(event)))
     if event['source'] != 'aws.securityhub':
         logger.error('This event is not a SecurityHub event')
         return { 'statusCode': 400 }
+    
+    # Extract necessary information
     finding_info = get_securityhub_finding(event)
     logger.info(json.dumps(finding_info))
 
-    #Get Session
+    # Get sessions
     session = {
         'logs_client':  boto3.client('logs'),
         'slack_client': WebClient( token=os.environ['SLACK_TOKEN'] )
     }
 
-    # Identify the channel to send
+    # Identify the channel to send, and publish a message
     channel_name = detect_slack_channel(session, finding_info)
     publish_message(session, channel_name, finding_info)
-
-
 
     #success
     return { 'statusCode': 200 }
@@ -72,7 +72,7 @@ def lambda_handler(event, context):
 #----------------------------------------
 # Functions
 #----------------------------------------
-# Extraction of necessary information
+# Extract necessary information
 def get_securityhub_finding(event):
     finding = event['detail']['findings'][0]
     ret = {
@@ -141,7 +141,7 @@ def publish_message(session, channel, finding):
     return
 
 
-# Write message to  specifed CloudWatch Logs log group
+# Write message to specifed log group
 def put_logs(client, group_name, stream_name_prefix, message):
     try:
         #Set Logs Event Data
