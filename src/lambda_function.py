@@ -24,7 +24,6 @@ slack_channel_name_list = {
     "other":  "lv-other-aws-secalerts"
 }
 
-
 # Set debug mode
 if os.environ['DEBUG'].lower() != "true":
     DEBUG = False
@@ -60,7 +59,7 @@ def lambda_handler(event, context):
     # Get sessions
     session = {
         'logs':  boto3.client('logs'),
-        'slack': WebClient( get_slack_token('lv-security-lambda-security-alert-slack-token') )
+        'slack': WebClient( get_slack_token(os.environ['SLACK_TOKEN_PARAMETER_STORE_KEY']) )
     }
 
     # Identify the channel to send, and publish a message
@@ -92,7 +91,7 @@ def get_securityhub_finding(event):
 
 
 # Get SLACK_TOKEN to Systems Manager parameter store
-def get_slack_token(key=''):
+def get_slack_token(key):
     client = boto3.client('ssm')
     try:
         ret = client.get_parameter(
